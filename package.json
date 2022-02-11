@@ -1,0 +1,22 @@
+{
+  "name": "debtmanagerapp",
+  "version": "1.0.0",
+  "description": "app for mamager debts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mfrodriguezp/backend_debtManager.git"
+  },
+  "author": "Miller Rodriguez",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Mfrodriguezp/backend_debtManager/issues"
+  },
+  "homepage": "https://github.com/Mfrodriguezp/backend_debtManager#readme",
+  "dependencies": {
+    "express": "^4.17.2"
+  }
+}
