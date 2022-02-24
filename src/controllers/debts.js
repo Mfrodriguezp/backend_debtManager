@@ -185,6 +185,40 @@ var controller = {
                 });
             }
         });
+    },
+    deleteDebt: function (req, res){
+        let debtId = req.params.id;
+        mysqlConnection.query(`DELETE FROM debts WHERE iddebts = ?`,[debtId],(err,results,fiels)=>{
+            if(!err){
+                if(results.affectedRows <= 0){
+                    return res.status(404).send({
+                        message: "The debt ID request no exist"
+                    });
+                }else{
+                    return res.status(200).send({
+                        message: "the debt has been satisfactorily eliminated"
+                    });
+                }
+            }else{
+                return res.status(500).send({
+                    message: `The following error has been generated: ${err}`
+                });
+            }
+        });
+    },
+    getTotalDebts: function (req, res){
+        mysqlConnection.query('SELECT debtState, SUM(debtValue) AS totalDebts FROM debts GROUP BY debtState HAVING debtState = "Debe"',
+        (err,rows,fiels)=>{
+            if(!err){
+                return res.status(200).send({
+                    totalDebts: rows
+                });
+            }else{
+                return res.status(500).send({
+                    message: `The following error has been generated: ${err}`
+                });
+            }
+        });
     }
 };
 
