@@ -2,10 +2,20 @@ const mysqlConnection = require('../database');
 
 var controller = {
     getCustomers: function (req, res) {
-        mysqlConnection.query('SELECT * FROM customers', (err, rows, fiels) => {
+        mysqlConnection.query('SELECT * FROM getCustomers', (err, rows, fiels) => {
             if (!err) {
-                res.status(200).json({
-                    customers: rows
+                if(!rows.length){
+                    res.status(200).json({
+                        customers: rows
+                    });
+                }else{
+                    res.status(404).send({
+                        message: "The clients table is empty"
+                    });
+                }
+            }else{
+                res.status(500).send({
+                    message: `The following error has been generated: ${err}`
                 });
             }
         });
@@ -15,12 +25,18 @@ var controller = {
 
         mysqlConnection.query(`SELECT * FROM customers where idcustomers = ${customerId}`, (err, rows, fiels) => {
             if (!err) {
-                res.status(200).json({
-                    customer: rows
-                });
+                if(!rows.length){
+                    res.status(200).json({
+                        customers: rows
+                    });
+                }else{
+                    res.status(404).send({
+                        message: "The clients ID not exist"
+                    });
+                }
             } else {
-                res.status(404).send({
-                    message: "El cliente buscado no existe"
+                res.status(500).send({
+                    message: `The following error has been generated: ${err}`
                 });
             }
         });
@@ -30,12 +46,12 @@ var controller = {
         if (params.customerName) {
             mysqlConnection.query(`INSERT INTO customers (customerName,phoneNumber) VALUES ("${params.customerName}","${params.phoneNumber}")`, (err, result, fiels) => {
                 if (!err) {
-                    res.status(200).send({
-                        message: "El cliente se ha creado correctamente"
+                    res.status(201).send({
+                        message: "The Customer has been created success"
                     });
                 } else {
                     res.status(500).send({
-                        message: `se ha producido un error en el servidor: ${err}`
+                        message: `The following error has been generated: ${err}`
                     });
                 }
             });
@@ -52,7 +68,7 @@ var controller = {
                     });
                 } else {
                     if (results.affectedRows >= 1) {
-                        return res.status(200).send({
+                        return res.status(201).send({
                             message: "The user has been modified correctly"
                         });
                     }
@@ -87,12 +103,10 @@ var controller = {
         });
     },
     getDebts: function (req, res) {
-        mysqlConnection.query(`select iddebts,customers.idcustomers, customers.customerName, debtValue, debtState, dateDebt, paymentDate 
-                                from debts inner JOIN customers 
-                                on debts.customers_idcustomers = customers.idcustomers;`,
+        mysqlConnection.query(`SELECT * FROM getDebts`,
             (err, rows, fiels) => {
                 if (!err) {
-                    if (rows.length = 'undefined') {
+                    if (!rows.length) {
                         return res.status(404).send({
                             message: "debts table is empty"
                         });
@@ -102,7 +116,7 @@ var controller = {
                         });
                     }
                 } else {
-                    return res.status(404).send({
+                    return res.status(500).send({
                         message: `Se ha generado el siguiente error: ${err}`
                     });
                 }
@@ -186,39 +200,39 @@ var controller = {
             }
         });
     },
-    deleteDebt: function (req, res){
+    deleteDebt: function (req, res) {
         let debtId = req.params.id;
-        mysqlConnection.query(`DELETE FROM debts WHERE iddebts = ?`,[debtId],(err,results,fiels)=>{
-            if(!err){
-                if(results.affectedRows <= 0){
+        mysqlConnection.query(`DELETE FROM debts WHERE iddebts = ?`, [debtId], (err, results, fiels) => {
+            if (!err) {
+                if (results.affectedRows <= 0) {
                     return res.status(404).send({
                         message: "The debt ID request no exist"
                     });
-                }else{
+                } else {
                     return res.status(200).send({
                         message: "the debt has been satisfactorily eliminated"
                     });
                 }
-            }else{
+            } else {
                 return res.status(500).send({
                     message: `The following error has been generated: ${err}`
                 });
             }
         });
     },
-    getTotalDebts: function (req, res){
+    getTotalDebts: function (req, res) {
         mysqlConnection.query('SELECT debtState, SUM(debtValue) AS totalDebts FROM debts GROUP BY debtState HAVING debtState = "Debe"',
-        (err,rows,fiels)=>{
-            if(!err){
-                return res.status(200).send({
-                    totalDebts: rows
-                });
-            }else{
-                return res.status(500).send({
-                    message: `The following error has been generated: ${err}`
-                });
-            }
-        });
+            (err, rows, fiels) => {
+                if (!err) {
+                    return res.status(200).send({
+                        totalDebts: rows
+                    });
+                } else {
+                    return res.status(500).send({
+                        message: `The following error has been generated: ${err}`
+                    });
+                }
+            });
     }
 };
 
