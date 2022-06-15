@@ -1,19 +1,27 @@
 const mysqlConnection = require('../database');
+const jwt = require('jsonwebtoken');
+const bcryptjs = require('bcryptjs');
+const { promisify } = require('util');
 
 var controller = {
+    test: function (req, res) {
+        res.status(200).send({
+            message: "The app is running"
+        });
+    },
     getCustomers: function (req, res) {
         mysqlConnection.query('SELECT * FROM getCustomers', (err, rows, fiels) => {
             if (!err) {
-                if(!rows.length){
+                if (rows.length) {
                     res.status(200).json({
                         customers: rows
                     });
-                }else{
+                } else {
                     res.status(404).send({
                         message: "The clients table is empty"
                     });
                 }
-            }else{
+            } else {
                 res.status(500).send({
                     message: `The following error has been generated: ${err}`
                 });
@@ -25,11 +33,11 @@ var controller = {
 
         mysqlConnection.query(`SELECT * FROM customers where idcustomers = ${customerId}`, (err, rows, fiels) => {
             if (!err) {
-                if(!rows.length){
+                if (!rows.length) {
                     res.status(200).json({
                         customers: rows
                     });
-                }else{
+                } else {
                     res.status(404).send({
                         message: "The clients ID not exist"
                     });
@@ -233,7 +241,105 @@ var controller = {
                     });
                 }
             });
+    },
+    registrerNewUser: function (req, res) {
+        let params = req.body;
+        mysqlConnection.query('SELECT userName from users WHERE userName =?', [params.userName], (err, rows, fiels) => {
+            if (!err) {
+                if (rows.length > 0) {
+                    res.status(200).send({
+                        message: "username already exist"
+                    });
+                } else {
+                    try {
+                        let passHash = bcryptjs.hashSync(params.password, 8);
+                        mysqlConnection.query(`INSERT INTO users (name,lastName, userName, pass, role, lastSessionStart) VALUES ('${params.name}','${params.lastName}','${params.userName}','${passHash}','${params.role}',DATE_FORMAT(now(),'%Y-%m-%d'))`, (err, results) => {
+                            if (!err) {
+                                res.status(200).send({
+                                    message: `user has been created`
+                                });
+                            } else {
+                                res.status(500).send({
+                                    message: `The following error has been generated ${err}`
+                                });
+                            }
+                        });
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            } else {
+                res.status(500).send({
+                    message: "the following error has been generated"
+                })
+            }
+
+        });
+    }, login: function (req, res) {
+        try {
+            let userName = req.body.userName;
+            let password = req.body.password;
+            if (!userName || !password) {
+                res.status(404).send({
+                    message: "Please enter please enter user or the password"
+                });
+            } else {
+                mysqlConnection.query('SELECT * from users WHERE userName = ? ', [userName], async (err, results) => {
+                    if (results.length == 0 || !(await bcryptjs.compare(password, results[0].pass))) {
+                        res.status(403).send({
+                            message: "The username and/or password are incorrect"
+                        });
+                    } else {
+                        //Login Success
+                        //Token creation 
+                        let idUser = results[0].idUsers;
+                        const token = jwt.sign({id:idUser},process.env.JWT_SECRET, {
+                            expiresIn: process.env.JWT_EXPIRIED
+                        });
+                        //Option params cookies
+                        const cookiesOptions = {
+                            expires: new Date(Date.now()+process.env.JWT_COOKIE_EXPIRIED * 24 * 60 * 60 *1000),
+                            httpOnly: true
+                        };
+
+                        res.cookie('jwt',token,cookiesOptions);
+                        res.status(200).send({
+                            message: "Login Success"
+                        });
+
+                    }
+                });
+            }
+        } catch (error) {
+            res.status(500).send({
+                message: "The following error has been generated: " + error
+            });
+        }
+
+    } , logout : function (req,res){
+        res.clearCookie('jwt');
+        return res.status(200).send({
+            message: "the user has successfully logged out"
+        });
     }
+    // isAuthenticated: function async (req,res, next){
+    //     if(req.cookies.jwt){
+    //         try {
+    //             const decodificated = await promisify(jwt.verify)(req.cookiesOptions.jwt, process.env.JWT_SECRET);
+    //             mysqlConnection.query('SELECT * FROM users WHERE idUsers = ?', [decodificated.id], (err,results)=>{
+    //                 if (!results){return next()}
+    //                 req.userName= results[0];
+    //                 return next();
+    //             });
+    //         } catch (error) {
+    //             console.log(error);
+    //         }
+    //     }else{
+    //         res.status(404).send({
+    //             message: "user isn't authenticated"
+    //         });
+    //     }
+    // }
 };
 
 module.exports = controller;
