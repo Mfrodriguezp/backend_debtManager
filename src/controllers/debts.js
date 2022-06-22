@@ -5,7 +5,7 @@ const { promisify } = require('util');
 
 var controller = {
     test: function (req, res) {
-        res.status(200).send({
+        res.send({
             message: "The app is running"
         });
     },
@@ -13,7 +13,7 @@ var controller = {
         mysqlConnection.query('SELECT * FROM getCustomers', (err, rows, fiels) => {
             if (!err) {
                 if (rows.length) {
-                    res.status(200).json({
+                    res.send({
                         customers: rows
                     });
                 } else {
@@ -34,7 +34,7 @@ var controller = {
         mysqlConnection.query(`SELECT * FROM customers where idcustomers = ${customerId}`, (err, rows, fiels) => {
             if (!err) {
                 if (!rows.length) {
-                    res.status(200).json({
+                    res.send({
                         customers: rows
                     });
                 } else {
@@ -98,7 +98,7 @@ var controller = {
                     });
                 } else {
                     if (results.affectedRows >= 1) {
-                        return res.status(200).send({
+                        return res.send({
                             message: "The user has been deleted correctly"
                         });
                     }
@@ -119,7 +119,7 @@ var controller = {
                             message: "debts table is empty"
                         });
                     } else {
-                        return res.status(200).send({
+                        return res.send({
                             debts: rows
                         });
                     }
@@ -138,7 +138,7 @@ var controller = {
             (err, rows, fiels) => {
                 if (!err) {
                     if (rows.length) {
-                        return res.status(200).send({
+                        return res.send({
                             debt: rows
                         });
                     } else {
@@ -155,17 +155,14 @@ var controller = {
     },
     setDebt: function (req, res) {
         let params = req.body;
-        mysqlConnection.query('SELECT idcustomers,customerName FROM customers WHERE customerName = ?', [params.customerName], (err, rows, fiels) => {
+        mysqlConnection.query('SELECT idcustomers,customerName FROM customers WHERE customerName = ?', [params.customerName], async (err, rows, fiels) => {
             if (!err) {
-                let data = rows.map((field) => {
-                    return field.idcustomers;
-                });
-                if (data.length >= 0) {
-                    mysqlConnection.query(`insert into debts (customers_idcustomers,debtValue,dateDebt,debtState) 
+                if (rows.length >= 0) {
+                    await mysqlConnection.query(`insert into debts (customers_idcustomers,debtValue,dateDebt,debtState) 
                                             VALUES (?,?,DATE_FORMAT(now(),'%Y-%m-%d'),'Debe')`, [data[0], params.debtValue],
                         (err, results, fiels) => {
                             if (!err) {
-                                res.status(200).send({
+                                res.send({
                                     message: `Has creadted ${results.affectedRows} rows`
                                 });
                             } else {
@@ -197,7 +194,7 @@ var controller = {
                         message: "The debt request no exist"
                     });
                 } else {
-                    return res.status(200).send({
+                    return res.send({
                         message: "The debt has been modified correctly"
                     });
                 }
@@ -217,7 +214,7 @@ var controller = {
                         message: "The debt ID request no exist"
                     });
                 } else {
-                    return res.status(200).send({
+                    return res.send({
                         message: "the debt has been satisfactorily eliminated"
                     });
                 }
@@ -232,7 +229,7 @@ var controller = {
         mysqlConnection.query('SELECT debtState, SUM(debtValue) AS totalDebts FROM debts GROUP BY debtState HAVING debtState = "Debe"',
             (err, rows, fiels) => {
                 if (!err) {
-                    return res.status(200).send({
+                    return res.send({
                         totalDebts: rows
                     });
                 } else {
@@ -247,7 +244,7 @@ var controller = {
         mysqlConnection.query('SELECT userName from users WHERE userName =?', [params.userName], (err, rows, fiels) => {
             if (!err) {
                 if (rows.length > 0) {
-                    res.status(200).send({
+                    res.send({
                         message: "username already exist"
                     });
                 } else {
@@ -255,7 +252,7 @@ var controller = {
                         let passHash = bcryptjs.hashSync(params.password, 8);
                         mysqlConnection.query(`INSERT INTO users (name,lastName, userName, pass, role, lastSessionStart) VALUES ('${params.name}','${params.lastName}','${params.userName}','${passHash}','${params.role}',DATE_FORMAT(now(),'%Y-%m-%d'))`, (err, results) => {
                             if (!err) {
-                                res.status(200).send({
+                                res.send({
                                     message: `user has been created`
                                 });
                             } else {
@@ -293,7 +290,7 @@ var controller = {
                         //Login Success
                         //Token creation 
                         let idUser = results[0].idUsers;
-                        const token = jwt.sign({id:idUser},process.env.JWT_SECRET, {
+                        const token = jwt.sign({ id: idUser }, process.env.JWT_SECRET, {
                             expiresIn: process.env.JWT_EXPIRIED
                         });
                         //Option params cookies
@@ -311,7 +308,7 @@ var controller = {
             });
         }
 
-    } , logout : function (req,res){
+    }, logout: function (req, res) {
         res.clearCookie('jwt');
         return res.status(200).send({
             message: "the user has successfully logged out"
