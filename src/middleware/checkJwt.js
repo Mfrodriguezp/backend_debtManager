@@ -6,6 +6,7 @@ function checkJwt(req, res, next) {
     let jwtPayload;
     try {
         jwtPayload = jwt.verify(token, process.env.JWT_SECRET);
+        //assignation jwtPayload to local variables 
         res.locals.jwtPayload = jwtPayload;
     } catch (e) {
         return res.status(401).send({
