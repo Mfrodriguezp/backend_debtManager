@@ -294,7 +294,7 @@ var controller = {
                             expiresIn: process.env.JWT_EXPIRIED
                         });
                         //Option params cookies
-                        res.status(200).send({
+                        res.send({
                             message: "Login Success",
                             token: token
                         });
@@ -304,13 +304,13 @@ var controller = {
             }
         } catch (error) {
             res.status(500).send({
-                message: "The following error has been generated: " + error
+                message: "it has been generated an error in server"
             });
         }
 
     }, logout: function (req, res) {
-        res.clearCookie('jwt');
-        return res.status(200).send({
+        res.removeHeader('token');
+        return res.send({
             message: "the user has successfully logged out"
         });
     }
