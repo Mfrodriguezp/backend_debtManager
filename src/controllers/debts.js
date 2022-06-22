@@ -297,14 +297,9 @@ var controller = {
                             expiresIn: process.env.JWT_EXPIRIED
                         });
                         //Option params cookies
-                        const cookiesOptions = {
-                            expires: new Date(Date.now()+process.env.JWT_COOKIE_EXPIRIED * 24 * 60 * 60 *1000),
-                            httpOnly: true
-                        };
-
-                        res.cookie('jwt',token,cookiesOptions);
                         res.status(200).send({
-                            message: "Login Success"
+                            message: "Login Success",
+                            token: token
                         });
 
                     }
@@ -322,24 +317,6 @@ var controller = {
             message: "the user has successfully logged out"
         });
     }
-    // isAuthenticated: function async (req,res, next){
-    //     if(req.cookies.jwt){
-    //         try {
-    //             const decodificated = await promisify(jwt.verify)(req.cookiesOptions.jwt, process.env.JWT_SECRET);
-    //             mysqlConnection.query('SELECT * FROM users WHERE idUsers = ?', [decodificated.id], (err,results)=>{
-    //                 if (!results){return next()}
-    //                 req.userName= results[0];
-    //                 return next();
-    //             });
-    //         } catch (error) {
-    //             console.log(error);
-    //         }
-    //     }else{
-    //         res.status(404).send({
-    //             message: "user isn't authenticated"
-    //         });
-    //     }
-    // }
 };
 
 module.exports = controller;
