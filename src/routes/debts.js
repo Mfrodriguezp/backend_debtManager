@@ -19,7 +19,7 @@ router.put('/editDebt/:id',debtController.editDebt);
 router.delete('/deleteDebt/:id',debtController.deleteDebt);
 router.get('/getTotalDebts',debtController.getTotalDebts);
 //admin only
-router.post('/registrerNewUser',[checkJwt.checkJwt,checkRole(['Admin'])],debtController.registrerNewUser);
+router.post('/registrerNewUser',[checkJwt.checkJwt,checkRole(['admin'])],debtController.registrerNewUser);
 router.post('/login',debtController.login);
 router.get('/logout',debtController.logout);
 
