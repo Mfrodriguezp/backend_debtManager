@@ -1,5 +1,6 @@
 const express = require('express');
 const debtController = require('../controllers/debts');
+const checkJwt = require('../middleware/checkJwt');
 
 const router = express.Router();
 
@@ -16,7 +17,8 @@ router.post('/setDebt',debtController.setDebt);
 router.put('/editDebt/:id',debtController.editDebt);
 router.delete('/deleteDebt/:id',debtController.deleteDebt);
 router.get('/getTotalDebts',debtController.getTotalDebts);
-router.post('/registrerNewUser',debtController.registrerNewUser);
+//admin only
+router.post('/registrerNewUser',checkJwt.checkJwt,debtController.registrerNewUser);
 router.post('/login',debtController.login);
 router.get('/logout',debtController.logout);
 
