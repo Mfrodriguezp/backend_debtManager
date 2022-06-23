@@ -1,7 +1,6 @@
 const mysqlConnection = require('../database');
 const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
-const { promisify } = require('util');
 
 var controller = {
     test: function (req, res) {
@@ -272,7 +271,65 @@ var controller = {
             }
 
         });
-    }, login: function (req, res) {
+    },
+    changePassword: function (req, res) {
+        //variables req.body
+        let oldPasswordBody = req.body.oldPassword;
+        let newPasswordBody = req.body.newPassword;
+        let oldPasswordDB;
+        //extract id jwtPaylod
+        const { id } = res.locals.jwtPayload;
+        let userId = JSON.stringify(id);
+        try {
+            //Validate that input fields are not empty
+            if (!oldPasswordBody || !newPasswordBody) {
+                return res.status(403).send({
+                    message: "The old Password and new Passwor is required"
+                });
+            } else {
+                //Validate if user already exist
+                mysqlConnection.query("SELECT * FROM users WHERE idUsers = ?", [userId], (err, rows, fields) => {
+                    if (!rows.length) {
+                        return res.status(404).send({
+                            message: "the user not exists"
+                        });
+                    } else {
+                        //Compare password db with password enter for user
+                        oldPasswordDB = rows[0].pass;
+                        let compareOldPasswords = bcryptjs.compareSync(oldPasswordBody, oldPasswordDB);
+                        let compareNewPasswords = bcryptjs.compareSync(newPasswordBody, oldPasswordDB);
+                        if (!compareOldPasswords) {
+                            return res.status(404).send({
+                                message: "please check the data entered"
+                            });
+                        } else if (compareNewPasswords) {
+                            return res.status(404).send({
+                                message: "The new password must be different from the old password"
+                            });
+                        } else {
+                            const hashNewPassword = bcryptjs.hashSync(newPasswordBody, 8);
+                            mysqlConnection.query("UPDATE users SET pass = ?, lastChangePassword = DATE_FORMAT(now(),'%Y-%m-%d') WHERE idUsers = ?", [hashNewPassword, userId], async (err, results, fields) => {
+                                if (!err) {
+                                    return await res.send({
+                                        message: "The password has been updated"
+                                    });
+                                } else {
+                                    return await res.status(404).send({
+                                        message: "could not update password"
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            return res.status(500).send({
+                message: "An error has been generated on the server"
+            });
+        }
+    },
+    login: function (req, res) {
         try {
             let userName = req.body.userName;
             let password = req.body.password;
@@ -308,7 +365,8 @@ var controller = {
             });
         }
 
-    }, logout: function (req, res) {
+    },
+    logout: function (req, res) {
         res.removeHeader('token');
         return res.send({
             message: "the user has successfully logged out"
