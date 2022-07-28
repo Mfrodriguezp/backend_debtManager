@@ -183,10 +183,9 @@ var controller = {
         });
     },
     editDebt: function (req, res) {
-        let debtId = req.params.id;
         let params = req.body;
         mysqlConnection.query(`UPDATE debts SET debtValue = ?, debtState = ?, paymentDate = DATE_FORMAT(now(),'%Y-%m-%d') 
-                                WHERE  iddebts = ?`, [params.debtPayment, params.debtState, debtId], (err, results, fiels) => {
+                                WHERE  iddebts = ?`, [params.debtPayment, params.debtState, params.debtId], (err, results, fiels) => {
             if (!err) {
                 if (results.affectedRows === 0) {
                     return res.status(404).send({
@@ -338,7 +337,7 @@ var controller = {
                     message: "Please enter please enter user or the password"
                 });
             } else {
-                mysqlConnection.query('SELECT * from users WHERE userName = ? ', [userName], async (err, results) => {
+                mysqlConnection.query('SELECT idUsers,pass,role from users WHERE userName = ? ', [userName], async (err, results) => {
                     if (results.length == 0 || !(await bcryptjs.compare(password, results[0].pass))) {
                         res.status(403).send({
                             message: "The username and/or password are incorrect"
@@ -347,15 +346,17 @@ var controller = {
                         //Login Success
                         //Token creation 
                         let idUser = results[0].idUsers;
+                        let role = results[0].role;
                         const token = jwt.sign({ id: idUser }, process.env.JWT_SECRET, {
                             expiresIn: process.env.JWT_EXPIRIED
                         });
                         //Option params cookies
                         res.send({
-                            message: "Login Success",
-                            token: token
+                            message: "OK",
+                            token: token,
+                            idUser,
+                            role
                         });
-
                     }
                 });
             }
@@ -367,10 +368,24 @@ var controller = {
 
     },
     logout: function (req, res) {
-        res.removeHeader('token');
+        
         return res.send({
             message: "the user has successfully logged out"
         });
+    },
+    isAuth: function (req,res){
+        const token = req.headers['token'];
+        if(token != 'noToken'){
+            return res.send({
+                message: "OK",
+                login:"success"
+            });
+        }else{
+            return res.status(200).send({
+                message: "Isn't loged",
+                login: "failed"
+            });
+        }
     }
 };
 

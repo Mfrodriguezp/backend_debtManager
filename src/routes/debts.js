@@ -12,13 +12,14 @@ router.get('/getCustomer/:id',debtController.getCustomer);
 router.post('/setCustomer',debtController.setCustomer);
 router.put('/editCustomer/:id',debtController.editCustomer);
 router.delete('/deleteCustomer/:id',debtController.deleteCustomer);
-router.get('/getDebts',debtController.getDebts);
+router.get('/getDebts',[checkJwt.checkJwt],debtController.getDebts);
 router.get('/getDebt/:id',debtController.getDebt);
 router.post('/setDebt',debtController.setDebt);
-router.put('/editDebt/:id',debtController.editDebt);
+router.put('/editDebt/:id',[checkJwt.checkJwt],debtController.editDebt);
 router.delete('/deleteDebt/:id',debtController.deleteDebt);
 router.get('/getTotalDebts',debtController.getTotalDebts);
 router.patch('/changePassword',[checkJwt.checkJwt],debtController.changePassword);
+router.get('/isAuth',debtController.isAuth);
 //admin only
 router.post('/registrerNewUser',[checkJwt.checkJwt,checkRole(['admin'])],debtController.registrerNewUser);
 router.post('/login',debtController.login);
