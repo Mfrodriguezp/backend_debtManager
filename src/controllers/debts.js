@@ -131,9 +131,9 @@ var controller = {
     },
     getDebt: function (req, res) {
         let debtId = req.params.id;
-        mysqlConnection.query(`select iddebts,customers.idcustomers, customers.customerName, debtValue, debtState, dateDebt, paymentDate 
+        mysqlConnection.query(`select iddebt,customers.idcustomers, customers.customerName, debtValue, debtState, dateDebt, paymentDate 
             from debts inner JOIN customers 
-            on debts.customers_idcustomers = customers.idcustomers WHERE iddebts =?;`, [debtId],
+            on debts.customers_idcustomers = customers.idcustomers WHERE iddebt =?;`, [debtId],
             (err, rows, fiels) => {
                 if (!err) {
                     if (rows.length) {
@@ -187,7 +187,7 @@ var controller = {
     editDebt: function (req, res) {
         let params = req.body;
         mysqlConnection.query(`UPDATE debts SET debtValue = ?, debtState = ?, paymentDate = DATE_FORMAT(now(),'%Y-%m-%d') 
-                                WHERE  iddebts = ?`, [params.debtPayment, params.debtState, params.debtId], (err, results, fiels) => {
+                                WHERE  iddebt = ?`, [params.debtPayment, params.debtState, params.debtId], (err, results, fiels) => {
             if (!err) {
                 if (results.affectedRows === 0) {
                     return res.status(404).send({
