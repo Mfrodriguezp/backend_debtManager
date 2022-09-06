@@ -154,11 +154,13 @@ var controller = {
     },
     setDebt: function (req, res) {
         let params = req.body;
+        //Validate exist client
         mysqlConnection.query('SELECT idcustomers,customerName FROM customers WHERE customerName = ?', [params.customerName], async (err, rows, fiels) => {
             if (!err) {
-                if (rows.length >= 0) {
+                if (rows.length > 0) {
+                    // Created Debt
                     await mysqlConnection.query(`insert into debts (customers_idcustomers,debtValue,dateDebt,debtState) 
-                                            VALUES (?,?,DATE_FORMAT(now(),'%Y-%m-%d'),'Debe')`, [data[0], params.debtValue],
+                                            VALUES (?,?,DATE_FORMAT(now(),'%Y-%m-%d'),'Debe')`, [rows[0].idcustomers, params.debtValue],
                         (err, results, fiels) => {
                             if (!err) {
                                 res.send({
@@ -239,7 +241,7 @@ var controller = {
     },
     registrerNewUser: function (req, res) {
         let params = req.body;
-        mysqlConnection.query('SELECT userName from users WHERE userName =?', [params.userName], (err, rows, fiels) => {
+        mysqlConnection.query('SELECT userName from users WHERE userName =?', [params.userName], async (err, rows, fiels) => {
             if (!err) {
                 if (rows.length > 0) {
                     res.send({
@@ -248,7 +250,7 @@ var controller = {
                 } else {
                     try {
                         let passHash = bcryptjs.hashSync(params.password, 8);
-                        mysqlConnection.query(`INSERT INTO users (name,lastName, userName, pass, role, lastSessionStart) VALUES ('${params.name}','${params.lastName}','${params.userName}','${passHash}','${params.role}',DATE_FORMAT(now(),'%Y-%m-%d'))`, (err, results) => {
+                        await mysqlConnection.query(`INSERT INTO users (name,lastName, userName, pass, role, lastSessionStart) VALUES ('${params.name}','${params.lastName}','${params.userName}','${passHash}','${params.role}',DATE_FORMAT(now(),'%Y-%m-%d'))`, (err, results) => {
                             if (!err) {
                                 res.send({
                                     message: `user has been created`
@@ -337,7 +339,7 @@ var controller = {
                     message: "Please enter please enter user or the password"
                 });
             } else {
-                mysqlConnection.query('SELECT idUsers,pass,role from users WHERE userName = ? ', [userName], async (err, results) => {
+                mysqlConnection.query('SELECT idUser,pass,role from users WHERE userName = ? ', [userName], async (err, results) => {
                     if (results.length == 0 || !(await bcryptjs.compare(password, results[0].pass))) {
                         res.status(403).send({
                             message: "The username and/or password are incorrect"
