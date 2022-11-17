@@ -32,9 +32,9 @@ var controller = {
 
         mysqlConnection.query(`SELECT * FROM customers where idcustomers = ${customerId}`, (err, rows, fiels) => {
             if (!err) {
-                if (!rows.length) {
+                if (rows.length) {
                     res.send({
-                        customers: rows
+                        customer: rows
                     });
                 } else {
                     res.status(404).send({
@@ -207,7 +207,7 @@ var controller = {
     },
     deleteDebt: function (req, res) {
         let debtId = req.params.id;
-        mysqlConnection.query(`DELETE FROM debts WHERE iddebts = ?`, [debtId], (err, results, fiels) => {
+        mysqlConnection.query(`DELETE FROM debts WHERE iddebt = ?`, [debtId], (err, results, fiels) => {
             if (!err) {
                 if (results.affectedRows <= 0) {
                     return res.status(404).send({
@@ -339,16 +339,17 @@ var controller = {
                     message: "Please enter please enter user or the password"
                 });
             } else {
-                mysqlConnection.query('SELECT idUser,pass,role from users WHERE userName = ? ', [userName], async (err, results) => {
+                mysqlConnection.query('SELECT idUser,userName,pass,role from users WHERE userName = ? ', [userName], async (err, results) => {
                     if (results.length == 0 || !(await bcryptjs.compare(password, results[0].pass))) {
-                        res.status(403).send({
+                        res.status(404).send({
                             message: "The username and/or password are incorrect"
                         });
                     } else {
                         //Login Success
                         //Token creation 
-                        let idUser = results[0].idUsers;
+                        let idUser = results[0].idUser;
                         let role = results[0].role;
+                        let user = results[0].userName;
                         const token = jwt.sign({ id: idUser }, process.env.JWT_SECRET, {
                             expiresIn: process.env.JWT_EXPIRIED
                         });
@@ -356,7 +357,7 @@ var controller = {
                         res.send({
                             message: "OK",
                             token: token,
-                            idUser,
+                            user,
                             role
                         });
                     }
