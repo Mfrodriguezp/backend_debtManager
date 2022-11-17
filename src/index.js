@@ -1,7 +1,7 @@
 const app = require('./app');
 
 //settings
-app.set('port', process.env.port || 3000);
+app.set('port', process.env.PORT);
 
 //Starting the server
 app.listen(app.get('port'), (err) => {

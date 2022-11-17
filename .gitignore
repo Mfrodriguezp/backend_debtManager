@@ -1,3 +1,5 @@
 #Directorios ignorados.
 node_modules/
 .vscode
+#ficheros ignorados
+.env
