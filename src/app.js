@@ -9,7 +9,11 @@ const debts_routes = require('./routes/debts');
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+    origin: "*", //servidor que deseas que consuma o (*) en caso que sea acceso libre
+    credentials: true
+}
+));
 app.use('/api/', debts_routes);
 app.use(function (req, res, next) {
     if (!req.userName) {
